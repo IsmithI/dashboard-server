@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+const validator = require("../models/validator");
 
 const mongo = require("../config/db");
 
@@ -16,14 +17,20 @@ router.get("/", function(req, res, next) {
 	});
 });
 
-router.put("/", function(req, res) {
-	mongo.client(db => {
-		db.collection("todo_list").save(req.body, err => {
-			if (err) throw err;
+router.put("/", function(req, res, next) {
+	console.log(req.body);
+	validator
+		.check(req.body, "item")
+		.then(item => {
+			mongo.client(db => {
+				db.collection("todo_list").insertOne(item, err => {
+					if (err) throw err;
 
-			res.payload(result);
-		});
-	});
+					res.payload(item);
+				})
+			})
+		})
+		.catch(err => next(err));
 });
 
 module.exports = router;
